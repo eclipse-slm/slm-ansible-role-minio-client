@@ -1,0 +1,44 @@
+---
+### INPUTS:
+- name: "Assert inputs of 'minio/client | install_mc.yml'"
+  ansible.builtin.assert:
+    that:
+      - (minio.url.api.internal is defined) and (minio.url.api.internal|length > 0)
+      - (_minio_root_user is defined) and (_minio_root_user|length > 0)
+      - (_minio_root_password is defined) and (_minio_root_password|length > 0)
+    fail_msg: "Variable must be defined and not empty"
+
+### OPTIONAL
+# - _minio_alias=<string> # Alias for the Minio server (default: slm)
+
+- name: "MINIO | Check if Minio Client is installed"
+  ansible.builtin.command: "mc --version"
+  changed_when: false
+  failed_when: false
+  register: mc_check
+
+- name: "MINIO | Download Minio Client"
+  when: mc_check.rc != 0
+  ansible.builtin.get_url:
+    url: "https://dl.min.io/client/mc/release/linux-amd64/mc"
+    dest: "/usr/local/bin/mc"
+    mode: '0755'
+  register: mc_download
+  changed_when: mc_download is changed
+
+- name: "MINIO | Check if Minio Client is installed"
+  ansible.builtin.command: "mc --version"
+  changed_when: false
+  failed_when: false
+
+- name: "MINIO | Set secure mc command"
+  ansible.builtin.set_fact:
+    mc_command: "mc"
+
+- name: "MINIO | Configure minio connection alias"
+  ansible.builtin.command: "{{ mc_command }} alias set {{ _minio_alias | default('slm') }} {{ minio.url.api.internal }} {{ _minio_root_user }} {{ _minio_root_password }}"
+  register: alias_command
+  changed_when: false
+  failed_when: success_txt not in alias_command.stdout
+  vars:
+    success_txt: "Added `{{ _minio_alias | default('slm') }}` successfully."

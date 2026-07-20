@@ -1,0 +1,68 @@
+---
+# Dependency management (download roles/collections)
+dependency:
+  name: galaxy
+  options:
+    ignore-certs: false
+    ignore-errors: false
+    role-file: requirements.yml
+    requirements-file: requirements.yml
+
+platforms:
+  - name: molecule-minio
+    image: "quay.io/minio/minio:RELEASE.2023-12-20T01-00-02Z"
+    command: minio server --console-address :9091 --address :9000
+    ports:
+      - "9000:9000"
+      - "9091:9091"
+    environment:
+      MINIO_ROOT_USER: "admin"
+      MINIO_ROOT_PASSWORD: "passwordpassword"
+      MINIO_VOLUMES: "/mnt/data"
+
+ansible:
+  cfg:
+    defaults:
+      host_key_checking: false
+      verbosity: 1
+    ssh_connection:
+      pipelining: true
+  env:
+    ANSIBLE_FORCE_COLOR: "1"
+    ANSIBLE_LOAD_CALLBACK_PLUGINS: "1"
+
+  executor:
+    backend: ansible-playbook
+    args:
+      ansible_playbook:
+        - --diff
+        - --force-handlers
+      ansible_navigator:
+        - --mode stdout
+        - --pull-policy missing
+        - --execution-environment-image ghcr.io/ansible/community-ansible-dev-tools:latest
+
+  playbooks:
+    create: create.yml
+    converge: converge.yml
+    destroy: destroy.yml
+    cleanup: cleanup.yml
+    prepare: prepare.yml
+    side_effect: side_effect.yml
+    verify: verify.yml
+
+scenario:
+  name: default
+  test_sequence:
+    - dependency
+    - cleanup
+    - destroy
+    - syntax
+    - create
+    - prepare
+    - converge
+    - idempotence
+    - side_effect
+    - verify
+    - cleanup
+    - destroy

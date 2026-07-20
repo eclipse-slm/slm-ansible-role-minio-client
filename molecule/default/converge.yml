@@ -1,0 +1,25 @@
+---
+# Purpose: bring the instance to the desired state by running the role under test.
+# Molecule calls this playbook with `molecule converge`.
+- name: Converge
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  become: true
+  vars:
+    minio:
+      url:
+        api:
+          internal: "http://localhost:9000"
+    _minio_root_user: "admin"
+    _minio_root_password: "passwordpassword"
+    user:
+      _alias: "slm"
+      _user: "testuser"
+      _password: "testpassword"
+      _access_key: "testaccesskey"
+      _secret_key: "testsecretkey"
+  tasks:
+    # TEST USER CREATION:
+    - name: "Test user creation"
+      ansible.builtin.include_tasks: tasks/test_user.yml

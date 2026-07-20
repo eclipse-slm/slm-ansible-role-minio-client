@@ -1,0 +1,22 @@
+---
+- name: Apply add_user
+  ansible.builtin.include_role:
+    name: ../../../slm-ansible-role-minio-client
+    tasks_from: add_user.yml
+  vars:
+    _alias: "{{ user._alias }}"
+    _user: "{{ user._user }}"
+    _password: "{{ user._password }}"
+    _access_key: "{{ user._access_key }}"
+    _secret_key: "{{ user._secret_key }}"
+
+- name: "Assert user was created"
+  ansible.builtin.command: "mc admin user list {{ user._alias }}"
+  register: user_list
+  changed_when: false
+
+- name: Assert user is in the list
+  ansible.builtin.assert:
+    that:
+      - user._user in user_list.stdout
+    fail_msg: "User {{ user._user }} was not created successfully"
