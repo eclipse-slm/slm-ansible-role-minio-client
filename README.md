@@ -1,38 +1,160 @@
-Role Name
-=========
+# Ansible Role: MinIO Client
 
-A brief description of the role goes here.
+[![License: MIT-0](https://img.shields.io/badge/License-MIT--0-blue.svg)](https://spdx.org/licenses/MIT-0.html)
 
-Requirements
-------------
+An Ansible role for installing, configuring, and managing MinIO Client (mc) and MinIO users.
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+## Features
 
-Role Variables
---------------
+- Install MinIO Client (mc) binary
+- Configure MinIO server aliases
+- Create MinIO users with service accounts
+- Manage user policies and permissions
+- Uninstall MinIO Client
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+## Requirements
 
-Dependencies
-------------
+- Ansible 2.2 or higher
+- Access to MinIO server API endpoint
+- MinIO root credentials (root user and password)
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+## Role Variables
 
-Example Playbook
-----------------
+### Default Variables
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `mc_bin_path` | `/usr/local/bin/mc` | Path where the MinIO Client binary will be installed |
 
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+### Required Variables
 
-License
--------
+These variables must be provided when using the role:
 
-BSD
+| Variable | Description |
+|----------|-------------|
+| `minio.url.api.internal` | MinIO server API URL (e.g., `http://localhost:9000`) |
+| `_minio_root_user` | MinIO root username |
+| `_minio_root_password` | MinIO root password |
 
-Author Information
-------------------
+### Optional Variables
 
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+| Variable | Description |
+|----------|-------------|
+| `_alias` | Alias name for the MinIO server (default: `slm`) |
+
+### Task-Specific Variables
+
+#### add_user.yml
+
+| Variable | Description |
+|----------|-------------|
+| `_user` | Username to create |
+| `_password` | User password |
+| `_access_key` | Service account access key |
+| `_secret_key` | Service account secret key |
+
+## Dependencies
+
+This role has no external dependencies.
+
+## Tasks
+
+### install_mc.yml
+Downloads and installs the MinIO Client binary from the official MinIO repository.
+
+### uninstall_mc.yml
+Removes the MinIO Client binary and configuration data.
+
+### add_user.yml
+Creates a new MinIO user with the following steps:
+1. Installs MinIO Client if not present
+2. Adds the user to MinIO
+3. Attaches the `readwrite` policy (if not already attached)
+4. Creates a service account for the user
+
+### get_policies_attached_to_user.yml
+Retrieves and sets facts about policies attached to a specific user.
+
+## Example Playbook
+
+### Basic Installation
+
+```yaml
+- hosts: servers
+  become: true
+  vars:
+    minio:
+      url:
+        api:
+          internal: "http://minio.example.com:9000"
+    _minio_root_user: "admin"
+    _minio_root_password: "your-root-password"
+    
+  roles:
+    - role: eclipse-slm.minio_client
+```
+
+### Create a MinIO User
+
+```yaml
+- hosts: servers
+  become: true
+  vars:
+    minio:
+      url:
+        api:
+          internal: "http://minio.example.com:9000"
+    _minio_root_user: "admin"
+    _minio_root_password: "your-root-password"
+    
+  tasks:
+    - name: Create MinIO user
+      ansible.builtin.include_role:
+        name: eclipse-slm.minio_client
+        tasks_from: add_user
+      vars:
+        _alias: "slm"
+        _user: "myuser"
+        _password: "mypassword"
+        _access_key: "myaccesskey"
+        _secret_key: "mysecretkey"
+```
+
+### Uninstall MinIO Client
+
+```yaml
+- hosts: servers
+  become: true
+  vars:
+    minio:
+      url:
+        api:
+          internal: "http://minio.example.com:9000"
+    _minio_root_user: "admin"
+    _minio_root_password: "your-root-password"
+    
+  tasks:
+    - name: Uninstall MinIO Client
+      ansible.builtin.include_role:
+        name: eclipse-slm.minio_client
+        tasks_from: uninstall_mc
+```
+
+## Testing
+
+This role uses Molecule for testing. To run tests:
+
+```bash
+cd molecule/default
+molecule test
+```
+
+## License
+
+MIT-0
+
+## Author Information
+
+- **Author**: Benjamin Gotz
+- **Company**: Fraunhofer IPA
+- **Namespace**: eclipse-slm
