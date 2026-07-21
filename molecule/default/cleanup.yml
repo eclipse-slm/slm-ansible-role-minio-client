@@ -1,0 +1,11 @@
+---
+- name: Cleanup
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  become: true
+  tasks:
+    - name: Uninstall mc
+      ansible.builtin.include_role:
+        name: ../../../slm-ansible-role-minio-client
+        tasks_from: uninstall_mc.yml
