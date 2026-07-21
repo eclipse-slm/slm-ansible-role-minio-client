@@ -1,0 +1,34 @@
+---
+### INTPUT:
+- name: "MINIO | Assert inputs of 'minio/client | get_policies_attached_to_user.yml'"
+  ansible.builtin.assert:
+    that:
+      - (minio.url.api.internal is defined) and (minio.url.api.internal|length > 0)
+      - (_minio_root_user is defined) and (_minio_root_user|length > 0)
+      - (_minio_root_password is defined) and (_minio_root_password|length > 0)
+      - (_alias is defined) and (_alias|length > 0)
+      - (_user is defined) and (_user|length > 0)
+
+- name: "MINIO | Install Minio Client"
+  ansible.builtin.import_tasks: install_mc.yml
+  vars:
+    _minio_alias: "{{ _alias }}"
+
+- name: "MINIO | Set secure mc command"
+  ansible.builtin.set_fact:
+    mc_command: "mc"
+
+
+- name: "MINIO | Get policies attached to user"
+  ansible.builtin.command: "{{ mc_command }} admin policy entities {{ _alias }} --user {{ _user }} --json"
+  register: user_policies_output
+  changed_when: false
+
+### OUTPUT:
+- name: "MINIO | Set fact for policies attached to user"
+  ansible.builtin.set_fact:
+    minio_user_policies_attached: "{{ ((user_policies_output.stdout | from_json).result.userMappings | selectattr('user', 'equalto', _user) | list)[0].policies | default([])}}"
+
+- name: "MINIO | Print policies attached to user '{{ _user }}'"
+  ansible.builtin.debug:
+    var: minio_user_policies_attached
