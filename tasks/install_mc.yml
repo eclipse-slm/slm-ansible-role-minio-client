@@ -21,7 +21,7 @@
   when: mc_check.rc != 0
   ansible.builtin.get_url:
     url: "https://dl.min.io/client/mc/release/linux-amd64/mc"
-    dest: "/usr/local/bin/mc"
+    dest: "{{ mc_bin_path }}"
     mode: '0755'
   register: mc_download
   changed_when: mc_download is changed

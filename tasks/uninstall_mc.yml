@@ -1,0 +1,10 @@
+---
+- name: Remove mc
+  ansible.builtin.file:
+    path: "{{ mc_bin_path }}"
+    state: absent
+
+- name: Remove mc data
+  ansible.builtin.file:
+    path: "~/.mc"
+    state: absent
