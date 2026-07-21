@@ -24,10 +24,14 @@
   register: user_policies_output
   changed_when: false
 
+- name: "MINIO | Set fact for user/policy mappings"
+  ansible.builtin.set_fact:
+    minio_user_policy_mappings: "{{ (user_policies_output.stdout | from_json).result.userMappings | default([]) }}" 
+
 ### OUTPUT:
 - name: "MINIO | Set fact for policies attached to user"
   ansible.builtin.set_fact:
-    minio_user_policies_attached: "{{ ((user_policies_output.stdout | from_json).result.userMappings | selectattr('user', 'equalto', _user) | list)[0].policies | default([])}}"
+    minio_user_policies_attached: "{{ (minio_user_policy_mappings | selectattr('user', 'equalto', _user) | list)[0].policies | default([])}}"
 
 - name: "MINIO | Print policies attached to user '{{ _user }}'"
   ansible.builtin.debug:
