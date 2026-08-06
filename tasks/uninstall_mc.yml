@@ -1,10 +1,10 @@
 ---
-- name: Remove mc
+- name: "MINIO_CLIENT | Remove mc"
   ansible.builtin.file:
     path: "{{ mc_bin_path }}"
     state: absent
 
-- name: Remove mc data
+- name: "MINIO_CLIENT | Remove mc data"
   ansible.builtin.file:
     path: "~/.mc"
     state: absent

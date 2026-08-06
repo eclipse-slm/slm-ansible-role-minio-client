@@ -1,5 +1,5 @@
 ---
-- name: "MINIO | Assert inputs of 'minio/client | create_user.yml'"
+- name: "MINIO_CLIENT | Assert inputs | create_user.yml'"
   ansible.builtin.assert:
     that:
       - (minio.url.api.internal is defined) and (minio.url.api.internal|length > 0)
@@ -12,12 +12,12 @@
       - (_secret_key is defined) and (_secret_key|length > 0)
     fail_msg: "Variable must be defined and not empty"
 
-- name: "MINIO | Install Minio Client"
+- name: "MINIO_CLIENT | Install Minio Client"
   ansible.builtin.import_tasks: install_mc.yml
   vars:
     _minio_alias: "{{ _alias }}"
 
-- name: "MINIO | Set secure mc command"
+- name: "MINIO_CLIENT | Set secure mc command"
   ansible.builtin.set_fact:
     mc_command: "mc"
 
@@ -26,24 +26,24 @@
   register: user_list
   changed_when: false
 
-- name: "MINIO | Create user"
+- name: "MINIO_CLIENT | Create user"
   when: _user not in user_list.stdout
   ansible.builtin.command: "{{ mc_command }} admin user add {{ _alias }} {{ _user }} \"{{ _password }}\""
 
-- name: "MINIO | Get policies attached to user"
+- name: "MINIO_CLIENT | Get policies attached to user"
   ansible.builtin.command: "{{ mc_command }} admin policy entities {{ _alias }} --user {{ _user }} --json"
   register: user_policies
   changed_when: false
 
-- name: "MINIO | Get policies attached to user"
+- name: "MINIO_CLIENT | Get policies attached to user"
   ansible.builtin.include_tasks: get_policies_attached_to_user.yml
 
-- name: "MINIO | Attach user to policy"
+- name: "MINIO_CLIENT | Attach user to policy"
   when: "'readwrite' not in minio_user_policies_attached"
   ansible.builtin.command: "{{ mc_command }} admin policy attach {{ _alias }} readwrite --user {{ _user }}"
   ignore_errors: true
 
-- name: "MINIO | Add user to svcacct"
+- name: "MINIO_CLIENT | Add user to svcacct"
   ansible.builtin.command: "{{ mc_command }} admin user svcacct add --access-key {{ _access_key }} --secret-key {{ _secret_key }} {{ _alias }} {{ _user }}"
   register: add_user_svcacct
   changed_when: add_user_svcacct.rc == 0
