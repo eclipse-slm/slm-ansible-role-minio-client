@@ -2,3 +2,16 @@
 ---
 # defaults file for minio_client
 mc_bin_path: /usr/local/bin/mc
+
+# MinIO archived the open-source MinIO Client (mc) project and dl.min.io now
+# returns HTTP 410 for every download path, so mc is fetched from the GitHub
+# release assets of the last open-source release instead.
+mc_version: RELEASE.2025-08-13T08-35-41Z
+mc_arch: "{{ 'linux-arm64' if (ansible_architecture | default('x86_64')) in ['aarch64', 'arm64'] else 'linux-amd64' }}"
+mc_download_url: "https://github.com/minio/mc/releases/download/{{ mc_version }}/mc.{{ mc_arch }}.{{ mc_version }}"
+
+# Checksums published alongside the release assets. Override (or set to {}) when
+# overriding mc_version, otherwise the download is rejected.
+mc_sha256:
+  linux-amd64: 01f866e9c5f9b87c2b09116fa5d7c06695b106242d829a8bb32990c00312e891
+  linux-arm64: 14c8c9616cfce4636add161304353244e8de383b2e2752c0e9dad01d4c27c12c
