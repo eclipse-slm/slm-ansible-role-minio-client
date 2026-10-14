@@ -20,9 +20,10 @@
 - name: "MINIO_CLIENT | Download Minio Client"
   when: mc_check.rc != 0
   ansible.builtin.get_url:
-    url: "https://dl.min.io/client/mc/release/linux-amd64/mc"
+    url: "{{ mc_download_url }}"
     dest: "{{ mc_bin_path }}"
     mode: '0755'
+    checksum: "{{ ('sha256:' ~ mc_sha256[mc_arch]) if mc_arch in mc_sha256 else omit }}"
   register: mc_download
   changed_when: mc_download is changed
 

@@ -25,6 +25,17 @@ An Ansible role for installing, configuring, and managing MinIO Client (mc) and 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `mc_bin_path` | `/usr/local/bin/mc` | Path where the MinIO Client binary will be installed |
+| `mc_version` | `RELEASE.2025-08-13T08-35-41Z` | mc release to install. The last open-source release; see the note below. |
+| `mc_arch` | derived from `ansible_architecture` | `linux-amd64` or `linux-arm64`. Falls back to `linux-amd64` when facts are not gathered. |
+| `mc_download_url` | GitHub release asset for `mc_version`/`mc_arch` | Full download URL, override to install from a mirror |
+| `mc_sha256` | checksums for the pinned release | Map of `mc_arch` to the expected SHA256. Set to `{}` to skip verification when overriding `mc_version`. |
+
+> **Note on the download source:** MinIO archived the open-source MinIO Client
+> project and `dl.min.io` now returns HTTP 410 for every download path, so this
+> role installs mc from the GitHub release assets of the last open-source
+> release and verifies the download against a pinned checksum.
+> Point `mc_download_url` at your own mirror if you do not want to depend on
+> the availability of an archived GitHub repository.
 
 ### Required Variables
 
@@ -60,7 +71,7 @@ This role has no external dependencies.
 ## Tasks
 
 ### install_mc.yml
-Downloads and installs the MinIO Client binary from the official MinIO repository.
+Downloads and installs the MinIO Client binary from `mc_download_url`, verifying it against `mc_sha256`.
 
 ### uninstall_mc.yml
 Removes the MinIO Client binary and configuration data.
